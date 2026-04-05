@@ -305,7 +305,7 @@ function App() {
   // INTERACTIVE
   var interactive = (
     <>
-      <Sec sub={"Forward and inverse evaluation"}>Polynomial Explorer</Sec>
+      <Sec sub={"Compute f(x) from x, or find x from f(x)"}>Polynomial Explorer</Sec>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
         <button onClick={function() { setMode("forward"); }} style={Object.assign({}, mono, {
           padding: "8px", borderRadius: 5, cursor: "pointer", fontSize: 14, fontWeight: 600,
@@ -371,6 +371,7 @@ function App() {
     <>
       <Sec sub="Expand to explore">Framework Details</Sec>
       <Panel id="domains" title="Three-Domain Decomposition" sub={"◇ PROPOSED — pending Connes trace conjecture"}>
+        <div style={Object.assign({}, mono, { fontSize: 12, color: C.mid, marginBottom: 8, lineHeight: 1.6 })}>The polynomial splits into three terms, each proposed to correspond to a region of the vacuum geometry.</div>
         <div style={Object.assign({}, mono, { fontSize: 13, color: C.mid, lineHeight: 1.8 })}>
           P = <span style={{color:C.green,fontWeight:600}}>4π³</span> + <span style={{color:C.green,fontWeight:600}}>π²</span> + <span style={{color:C.gold,fontWeight:600}}>π</span> = <span style={{fontWeight:600,color:C.text}}>137.036</span>
           <div style={{ display: "flex", gap: 6, marginTop: 6, marginBottom: 6 }}>
@@ -382,6 +383,7 @@ function App() {
         </div>
       </Panel>
       <Panel id="connes" title="Connes Trace Convergence" sub={"◇ UNVERIFIED — the decisive test"}>
+        <div style={Object.assign({}, mono, { fontSize: 12, color: C.mid, marginBottom: 8, lineHeight: 1.6 })}>If correct, Connes' trace formula evaluated at Fibonacci denominators should converge to P = 137.036 — this is the framework's most testable prediction.</div>
         <div style={Object.assign({}, mono, { fontSize: 13, color: C.mid, lineHeight: 1.7, marginBottom: 10, padding: "8px 10px", background: C.purple + "06", borderRadius: 6 })}>
           <span style={Object.assign({}, mono, { fontSize: 12, padding: "1px 6px", borderRadius: 8, background: C.purple + "15", color: C.purple, fontWeight: 600, marginRight: 6 })}>PREDICTION</span>
           Matrix traces at Fibonacci denominators should converge to P = 137.036 at rate {"φ⁻²ᵏ"}.
@@ -431,6 +433,7 @@ function App() {
         })}
       </Panel>
       <Panel id="rk" title="R(k) Metric-Dominance Diagnostic" sub={"◇ NOVEL — not yet experimentally tested"}>
+        <div style={Object.assign({}, mono, { fontSize: 12, color: C.mid, marginBottom: 8, lineHeight: 1.6 })}>R(k) measures the balance between metric geometry and Berry curvature in the quantum geometric tensor. R = 1 (neutral) means metric-dominated; R = 0 (charged) means curvature-dominated.</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
           <div>
             <div style={Object.assign({}, mono, { fontSize: 12, color: C.dim, marginBottom: 4 })}>Tr(g) metric</div>
@@ -491,7 +494,7 @@ function App() {
           <div>
             <Sec sub={"Click any chamber to explore"}>Distinguished Evaluations</Sec>
             {shellSection}
-            {detail}
+            <div style={{minHeight: 20}}>{detail}</div>
           </div>
           <div style={{ position: "sticky", top: 20 }}>
             {interactive}
@@ -502,7 +505,7 @@ function App() {
         <>
           <Sec sub={"Click any chamber to explore"}>Distinguished Evaluations</Sec>
           {shellSection}
-          {detail}
+          <div style={{minHeight: 20}}>{detail}</div>
           {interactive}
           {panels}
         </>
