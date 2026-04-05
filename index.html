@@ -493,7 +493,7 @@ function App() {
           <div>
             <Sec sub={"Click any chamber to explore"}>Distinguished Evaluations</Sec>
             {shellSection}
-            <div style={{minHeight: 20}}>{detail}</div>
+            <div style={{minHeight: active ? 200 : 0, transition: "min-height 0.2s"}}>{detail}</div>
           </div>
           <div style={{ position: "sticky", top: 20 }}>
             {interactive}
@@ -504,7 +504,7 @@ function App() {
         <>
           <Sec sub={"Click any chamber to explore"}>Distinguished Evaluations</Sec>
           {shellSection}
-          <div style={{minHeight: 20}}>{detail}</div>
+          <div style={{minHeight: active ? 200 : 0, transition: "min-height 0.2s"}}>{detail}</div>
           {interactive}
           {panels}
         </>
