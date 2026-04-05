@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hopfion Evaluation Map</title>
+  <meta name="description" content="Interactive evaluation map for f(x) = 4x³ + x² + x — companion to Hopfion Topology, Quantum Geometric Tensor Saturation, and the Fine-Structure Constant">
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo } = React;
+
+const PHI = (1 + Math.sqrt(5)) / 2;
+const PI = Math.PI;
+const CODATA = 137.035999177;
+const P_EXACT = 4 * Math.pow(PI, 3) + PI * PI + PI;
+const DEMO_MS = 4500;
+
+const C = {
+  bg: "#ffffff", card: "#f4f8f6", text: "#1a1a1a", mid: "#444444", dim: "#666666",
+  border: "#e4e0da", light: "#dce8e0",
+  green: "#3A8868", purple: "#9868A0", gold: "#8A7A4A",
+  rose: "#B070A0", brown: "#8B6858",
+};
+
+var f = function(x) { return 4*x*x*x + x*x + x; };
+var fp = function(x) { return 12*x*x + 2*x + 1; };
+var h = function(x) { return 4*x*x*x - x*x - x; };
+
+function inverseSolve(y) {
+  var x = Math.cbrt(y / 4);
+  for (var i = 0; i < 200; i++) {
+    var dx = (f(x) - y) / fp(x);
+    x -= dx;
+    if (Math.abs(dx) < 1e-12) break;
+  }
+  return x;
+}
+
+var EVALS = [
+  { x: PI, label: "π", out: "137.036", match: "α⁻¹ = 137.035999", gap: "2.22 ppm", field: "Electromagnetism", color: "#287050", status: "proposed",
+    math: "f(π) = 137.036304. Closest among 9,260 pure-π polynomials by 206×.",
+    prop: "CENTRAL PROPOSAL: This is the saturation ceiling of the vacuum topology. The 2.22 ppm gap is argued consistent with QED vacuum polarization." },
+  { x: 3, label: "3", out: "120", match: "5! = 1/ζ(−3) = |I_h|", gap: "exact", field: "Vacuum energy", color: "#A07040", status: "math",
+    math: "f(3) = 108+9+3 = 120 = 5! = 1/ζ(−3). Also f(1)·f(3) = 720 = 6!.",
+    prop: "Proposed connection to vacuum energy and icosahedral symmetry." },
+  { x: PHI, label: "φ", out: "5φ³ = 21.18", match: "Algebraic identity", gap: "exact", field: "Number theory", color: C.gold, status: "math",
+    math: "f(φ) = 5φ³ exactly. One-line proof from φ²=φ+1. Dual: h(φ) = 3φ³.",
+    prop: "The coefficient 5 = −Δ_q/3 connects the discriminant to golden-ratio self-consistency." },
+  { x: 1, label: "1", out: "6", match: "Calabi-Yau dimensions", gap: "exact", field: "String theory", color: "#3A8888", status: "math",
+    math: "f(1) = 4+1+1 = 6. Coefficient sum, true by definition.",
+    prop: "Proposed: compactification dimensions. Partly forced for (a,1,1) polynomials." },
+  { x: 0.5, label: "1/2", out: "5/4", match: "Re(s) = 1/2 via CPT", gap: "exact", field: "Zeta function", color: "#7A9A30", status: "math",
+    math: "f(1/2) = 5/4. f(1/2)+f(−1/2) = 1/2 follows from f_even = x².",
+    prop: "Proposed connection to the Riemann critical line and Hopf base radius." },
+  { x: 1/(PHI*PHI), label: "1/φ²", out: "0.751", match: "≈ 3/4 mass exponent", gap: "0.10%", field: "Particle physics", color: "#9868A0", status: "proposed",
+    math: "f(0.38197...) = 0.750776. Verified arithmetic.",
+    prop: "Proposed: proximity to 3/4, the Faddeev-Niemi exponent." },
+  { x: 0, label: "0", out: "0", match: "Trivial vacuum", gap: "exact", field: "Ground state", color: "#B0A040", status: "math",
+    math: "f(0) = 0. The polynomial passes through the origin.",
+    prop: "Identified as the trivial vacuum state." },
+  { x: -1, label: "−1", out: "−4", match: "|f(−1)| = spacetime dim", gap: "exact", field: "Dimensionality", color: "#C07858", status: "math",
+    math: "f(−1) = −4. Alternating coefficient sum, forced for (a,1,1).",
+    prop: "Proposed: |f(−1)| = 4 = spacetime dimension. Algebraically forced." },
+];
+
+var KNOWN = [
+  { v: CODATA, l: "α⁻¹ CODATA" }, { v: PI, l: "π" }, { v: Math.E, l: "e" }, { v: PHI, l: "φ" },
+  { v: 6, l: "3!" }, { v: 24, l: "4!" }, { v: 120, l: "5!" }, { v: 720, l: "6!" },
+  { v: 0.75, l: "3/4" }, { v: 1.25, l: "5/4" }, { v: PI*PI, l: "π²" },
+  { v: 4*Math.pow(PI,3), l: "4π³" }, { v: 21.18034, l: "5φ³" },
+  { v: 0, l: "0" }, { v: 1, l: "1" }, { v: 3, l: "3" },
+];
+
+function findNear(val) {
+  if (Math.abs(val) < 1e-10) return [{ l: "0", pct: 0 }];
+  return KNOWN.map(function(k) { return { l: k.l, pct: (Math.abs(val - k.v) / Math.max(Math.abs(k.v), 1e-10)) * 100 }; })
+    .filter(function(k) { return k.pct < 1; }).sort(function(a, b) { return a.pct - b.pct; });
+}
+
+var XIDENTS = [
+  { x: PI, l: "π" }, { x: 1/(PHI*PHI), l: "1/φ²" }, { x: PHI, l: "φ" },
+  { x: 3, l: "3" }, { x: 1, l: "1" }, { x: -1, l: "−1" }, { x: 0.5, l: "1/2" }, { x: 0, l: "0" },
+];
+function identifyX(x) { for (var i=0;i<XIDENTS.length;i++) if (Math.abs(x-XIDENTS[i].x)<0.001) return XIDENTS[i].l; return null; }
+
+var MASS = [
+  { n:1, fib:true, type:"anchor" }, { n:2, fib:true, type:"theory" }, { n:5, fib:true, type:"theory" },
+  { n:8, fib:true, type:"retro", meas:1505 },
+  { n:13, fib:true, type:"pred" }, { n:15, fib:false, type:"retro", meas:2370 },
+  { n:19, fib:false, type:"pred" }, { n:21, fib:true, type:"pred" },
+];
+
+function connesT(k) { return 4*Math.pow(PI,3) + (PI*PI+PI) * (1 - Math.pow(PHI, -2*k)); }
+function fmt(v, d) { d = d || 6; if (Math.abs(v)<1e-14) return "0"; if (Math.abs(v)>1e6) return v.toExponential(3); return v.toFixed(d).replace(/\.?0+$/, "") || "0"; }
+
+function App() {
+  var _s = useState(PI), xVal = _s[0], setXVal = _s[1];
+  var _m = useState("forward"), mode = _m[0], setMode = _m[1];
+  var _y = useState(""), yInput = _y[0], setYInput = _y[1];
+  var _xi = useState(PI.toFixed(6)), xInput = _xi[0], setXInput = _xi[1];
+  var _d = useState(false), demo = _d[0], setDemo = _d[1];
+  var _ds = useState(0), demoStep = _ds[0], setDemoStep = _ds[1];
+  var _op = useState(null), openPanel = _op[0], setOpenPanel = _op[1];
+  var _me = useState(313), massE1 = _me[0], setMassE1 = _me[1];
+  var _rg = useState(10), rkG = _rg[0], setRkG = _rg[1];
+    var _ro = useState(0), rkO = _ro[0], setRkO = _ro[1];
+    var _ck = useState(11), conK = _ck[0], setConK = _ck[1];
+  var _w = useState(false), wide = _w[0], setWide = _w[1];
+  var _cl = useState(true), clicked = _cl[0], setClicked = _cl[1];
+  var demoRef = useRef(null);
+  var sorted = useMemo(function() { return EVALS.slice().sort(function(a,b) { return b.x - a.x; }); }, []);
+
+  useEffect(function() { var c = function() { setWide(window.innerWidth >= 840); }; c(); window.addEventListener("resize", c); return function() { window.removeEventListener("resize", c); }; }, []);
+  useEffect(function() {
+    var l = document.createElement("link"); l.href = "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"; l.rel = "stylesheet"; document.head.appendChild(l);
+    var s = document.createElement("style"); s.textContent = "@keyframes demoBar{from{width:0%}to{width:100%}} input[type=text],input[type=number]{font-family:'IBM Plex Mono',monospace !important;} input::placeholder{color:#bbb;font-weight:400;}"; document.head.appendChild(s);
+    return function() { document.head.removeChild(l); document.head.removeChild(s); };
+  }, []);
+
+  useEffect(function() {
+    if (!demo) { if (demoRef.current) clearInterval(demoRef.current); return; }
+    var idx = 0; setDemoStep(0); setXVal(sorted[0].x); setXInput(sorted[0].x.toFixed(6)); setClicked(true);
+    demoRef.current = setInterval(function() { idx++; if (idx >= sorted.length) { setDemo(false); setXVal(PI); setXInput(PI.toFixed(6)); setClicked(true); } else { setDemoStep(idx); setXVal(sorted[idx].x); setXInput(sorted[idx].x.toFixed(6)); setClicked(true); } }, DEMO_MS);
+    return function() { if (demoRef.current) clearInterval(demoRef.current); };
+  }, [demo, sorted]);
+
+  var active = useMemo(function() { return EVALS.find(function(e) { return Math.abs(xVal - e.x) < 0.08; }) || null; }, [xVal]);
+  var fx = f(xVal), nearMatches = useMemo(function() { return findNear(fx); }, [fx]);
+  var rkVal = rkG / (rkG + 2 * rkO);
+  var go = function(x) { setXVal(x); setXInput(x.toFixed(6)); setMode("forward"); setClicked(true); if (demo) setDemo(false); };
+  var mono = { fontFamily: "'IBM Plex Mono', monospace" };
+  var serif = { fontFamily: "'EB Garamond', Georgia, serif" };
+
+  // Section header
+  var Sec = function(props) {
+    return (<div style={{ padding: "4px 0 2px", borderBottom: "none", marginBottom: 8 }}>
+      <div style={Object.assign({}, serif, { fontSize: 16, fontWeight: 700, color: C.text })}>{props.children}</div>
+      {props.sub && <div style={Object.assign({}, mono, { fontSize: 13, color: C.mid, marginTop: 2 })}>{props.sub}</div>}
+    </div>);
+  };
+
+  // Expandable panel
+  var Panel = function(props) {
+    var isOpen = openPanel === props.id;
+    return (<>
+      <div onClick={function() { setOpenPanel(isOpen ? null : props.id); }} style={{
+        display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px",
+        background: "#faf9f7", border: "0.5px solid " + C.gold + "22", borderRadius: isOpen ? "8px 8px 0 0" : 8,
+        cursor: "pointer", marginBottom: isOpen ? 0 : 6,
+      }}>
+        <div>
+          <div style={Object.assign({}, serif, { fontSize: 15, fontWeight: 600, color: C.text })}>{props.title}</div>
+          <div style={Object.assign({}, mono, { fontSize: 12, color: C.dim })}>{props.sub}</div>
+        </div>
+        <span style={{ fontSize: 20, color: C.dim, userSelect: "none" }}>{isOpen ? "−" : "+"}</span>
+      </div>
+      {isOpen && <div style={{ padding: "12px 14px", border: "0.5px solid " + C.gold + "22", borderTop: "none", borderRadius: "0 0 8px 8px", marginBottom: 6, background: "#fff" }}>{props.children}</div>}
+    </>);
+  };
+
+  // HERO
+  var hero = (
+    <div style={{ background: "linear-gradient(135deg, " + C.green + "08, " + C.purple + "06)", border: "0.5px solid " + C.gold + "33", borderRadius: 8, padding: wide ? "14px 20px" : "12px", marginBottom: 10 }}>
+      <div style={Object.assign({}, serif, { fontSize: 14, color: C.mid, marginBottom: 8, lineHeight: 1.6 })}>α⁻¹ ≈ 137.036 is the fine-structure constant — it governs the strength of all electromagnetic interactions, and no known theory predicts its value. This polynomial, with coefficients argued to be fixed by topology, outputs it when evaluated at π.</div>
+      <div style={Object.assign({}, mono, { fontSize: wide ? 15 : 13, color: C.text, marginBottom: 12 })}>f(x) = 4x³ + x² + x</div>
+      <div style={{ display: "flex", alignItems: wide ? "center" : "flex-start", gap: wide ? 12 : 8, flexDirection: wide ? "row" : "column", flexWrap: "wrap" }}>
+        <div>
+          <div style={Object.assign({}, mono, { fontSize: 13, color: C.dim, marginBottom: 2 })}>THIS POLYNOMIAL</div>
+          <div style={Object.assign({}, mono, { fontSize: wide ? 22 : 18, fontWeight: 700, color: C.gold })}>f(π) = 137.036<span style={{ color: C.gold }}>304</span></div>
+        </div>
+        <div style={Object.assign({}, serif, { fontSize: 20, color: C.dim, alignSelf: "center" })}>{"≈"}</div>
+        <div>
+          <div style={Object.assign({}, mono, { fontSize: 13, color: C.dim, marginBottom: 2 })}>MEASURED VALUE (CODATA 2022)</div>
+          <div style={Object.assign({}, mono, { fontSize: wide ? 22 : 18, fontWeight: 700, color: C.text })}>{"α⁻¹"} = 137.035<span style={{ color: C.mid }}>999</span></div>
+        </div>
+        <div style={{ background: C.gold + "10", borderRadius: 6, padding: "8px 14px", alignSelf: "center" }}>
+          <div style={Object.assign({}, mono, { fontSize: 14, color: C.gold, fontWeight: 600 })}>{"Δ"} 2.22 ppm gap</div>
+          <div style={Object.assign({}, mono, { fontSize: 12, color: C.dim })}>2 parts per million</div>
+        </div>
+      </div>
+      <div style={Object.assign({}, mono, { fontSize: 12, color: C.dim, marginTop: 8, borderTop: "0.5px solid " + C.gold + "22", paddingTop: 6 })}>
+        Among 9,260 similar polynomials tested, the next closest to α⁻¹ is <strong style={{ color: C.text }}>206× farther</strong> from the measured value — this is not a coincidence that is easy to dismiss.</div>
+      <div style={{textAlign:"center",marginTop:10}}>
+        <button onClick={function(){setDemo(!demo);}} style={Object.assign({},mono,{padding:"8px 28px",borderRadius:20,cursor:"pointer",fontSize:12,fontWeight:600,background:demo?C.gold+"18":C.gold+"15",color:C.gold,border:"0.5px solid "+C.gold+"33"})}>{demo?"■ Stop tour":"▶ Tour the 8 evaluations"}</button>
+      </div>
+    </div>
+  );
+
+  // NAUTILUS SHELL
+  var shellSection = (function() {
+    var sz = wide ? 480 : 360;
+    var cx0 = sz * 0.43, cy0 = sz * 0.46;
+    var spiralOrder = EVALS.slice().sort(function(a, b) { return Math.abs(f(a.x)) - Math.abs(f(b.x)); });
+    var rMin = sz * 0.022;
+    var r = function(th) { return rMin * Math.pow(PHI, th / Math.PI); };
+    var ang0 = -Math.PI * 0.16;
+    var px = function(rad, a) { return cx0 + rad * Math.cos(a + ang0); };
+    var py = function(rad, a) { return cy0 + rad * Math.sin(a + ang0); };
+    var totalChambers = 24, secAng = Math.PI / 4, dataStart = 16;
+
+    var pearl = function(i) {
+      var t = i / totalChambers;
+      return "rgba(185,160,70," + (0.24 - t * 0.08).toFixed(2) + ")";
+    };
+
+    var chambers = [];
+    for (var i = 0; i < totalChambers; i++) {
+      var th1 = i * secAng, th2 = (i + 1) * secAng;
+      var steps = 40;
+      var outer = [], inner = [];
+      for (var s = 0; s <= steps; s++) {
+        var th = th1 + s * (th2 - th1) / steps;
+        outer.push([r(th), th]);
+      }
+      for (var s2 = steps; s2 >= 0; s2--) {
+        var th3 = th1 + s2 * (th2 - th1) / steps;
+        inner.push([i < 8 ? Math.max(1, r(th3) * 0.08) : r(th3 - 2 * Math.PI), th3]);
+      }
+      var pts = outer.concat(inner);
+      var d = "M" + pts.map(function(p) { return px(p[0], p[1]).toFixed(1) + "," + py(p[0], p[1]).toFixed(1); }).join("L") + "Z";
+      var isData = i >= dataStart;
+      var ev = isData ? spiralOrder[i - dataStart] : null;
+      var isAct = ev && active === ev && clicked;
+      var hasActive = !!active && clicked;
+      var midTh = (th1 + th2) / 2;
+      var rOuter = r(midTh), rInner = i < 8 ? r(midTh) * 0.08 : r(midTh - 2 * Math.PI);
+      var midR = (rOuter + rInner) / 2;
+      chambers.push({
+        d: d, isData: isData, ev: ev, isAct: isAct, hasActive: hasActive,
+        labelX: px(midR, midTh), labelY: py(midR, midTh), chamberH: rOuter - rInner, i: i,
+        fill: isAct ? (ev.color + "88") : pearl(i),
+        opacity: isAct ? 1 : (hasActive && isData ? 0.4 : (isData ? 1 : 0.75))
+      });
+    }
+
+    var wallPts = [];
+    for (var w = 0; w <= 300; w++) {
+      var wth = w * totalChambers * secAng / 300;
+      wallPts.push(px(r(wth), wth).toFixed(1) + "," + py(r(wth), wth).toFixed(1));
+    }
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 4, marginBottom: 6, filter: "drop-shadow(0 3px 10px rgba(138,122,74,0.08))" }}>
+        <svg viewBox={"0 0 " + sz + " " + Math.round(sz * 0.79)} style={{ width: "100%", display: "block" }}>
+          {chambers.map(function(ch, ci) {
+            return (<g key={ci} style={ch.isData ? { cursor: "pointer" } : undefined} onClick={ch.ev ? function() { go(ch.ev.x); } : undefined}>
+              <path d={ch.d} fill={ch.fill} opacity={ch.opacity} stroke="none" />
+            </g>);
+          })}
+          {Array.from({ length: totalChambers }, function(_, si) {
+            var sth = si * secAng;
+            var sRi = si < 8 ? Math.max(1, r(sth) * 0.08) : r(sth - 2 * Math.PI);
+            return <line key={"s" + si} x1={px(sRi, sth)} y1={py(sRi, sth)} x2={px(r(sth), sth)} y2={py(r(sth), sth)} stroke="#8A7A30" strokeWidth={0.4} opacity={0.3}  />;
+          })}
+          <path d={"M" + wallPts.join("L")} fill="none" stroke="#6A5A18" strokeWidth={1} opacity={0.4} strokeLinecap="round" />
+          <path d={"M" + wallPts.join("L")} fill="none" stroke="#C0A840" strokeWidth={0.6} opacity={0.45} strokeLinecap="round" />
+          {chambers.filter(function(ch) { return ch.isData; }).map(function(ch, li) {
+            return (<g key={"l" + li} pointerEvents="none">
+              {ch.chamberH > 16 && <text x={ch.labelX} y={ch.labelY + (ch.isAct ? -5 : 0)} fill={ch.isAct ? "#ffffff" : "#6A5A28"} fontSize={ch.isAct ? Math.min(ch.chamberH * 0.35, 16) : Math.min(ch.chamberH * 0.28, 12)} fontWeight={700} textAnchor="middle" dominantBaseline="central" fontFamily="'EB Garamond',serif" opacity={ch.isAct ? 1 : 0.6}>{ch.ev.label}</text>}
+              {ch.isAct && ch.chamberH > 25 && <text x={ch.labelX} y={ch.labelY + Math.min(ch.chamberH * 0.22, 14)} fill="#ffffff" fontSize={Math.min(ch.chamberH * 0.18, 11)} fontWeight={600} textAnchor="middle" fontFamily="'IBM Plex Mono',monospace" opacity={0.9}>{ch.ev.out}</text>}
+            </g>);
+          })}
+          <circle cx={cx0} cy={cy0} r={rMin * 0.5} fill="rgba(138,122,74,0.04)" stroke="#A08820" strokeOpacity={0.5} strokeWidth={1} />
+        </svg>
+        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 5, marginTop: 6 }}>
+          {spiralOrder.map(function(ev, li) {
+            var isA = active === ev && clicked;
+            return <span key={li} onClick={function() { go(ev.x); }} style={Object.assign({}, mono, { fontSize: 12, color: isA ? ev.color : C.dim, cursor: "pointer", fontWeight: isA ? 700 : 400, padding: "2px 8px", borderRadius: 10, background: isA ? ev.color + "12" : "transparent", border: isA ? "0.5px solid " + ev.color + "33" : "0.5px solid transparent", transition: "all .15s" })}>
+              {ev.label} {"→"} {ev.out}
+            </span>;
+          })}
+        </div>
+      </div>
+    );
+  })();
+
+  // DETAIL
+  var detail = active && (
+    <div style={{ border: "0.5px solid " + C.gold + "22", borderRadius: 8, padding: "12px 14px", marginBottom: 10, background: "#faf9f7" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+        <span style={Object.assign({}, serif, { fontSize: 18, fontWeight: 700, color: active.color })}>{active.label} {"→"} {active.out}</span>
+        <span style={Object.assign({}, mono, { fontSize: 12, padding: "2px 8px", borderRadius: 10, background: active.color + "15", color: active.color, fontWeight: 600 })}>{active.field}</span>
+        <span style={Object.assign({}, mono, { fontSize: 12, padding: "2px 8px", borderRadius: 10, background: active.gap === "exact" ? C.green + "12" : C.gold + "12", color: active.gap === "exact" ? C.green : C.gold, fontWeight: 600 })}>{active.gap}</span>
+      </div>
+      <div style={Object.assign({}, mono, { fontSize: 13, color: C.text, lineHeight: 1.7, padding: "8px 10px", background: C.green + "08", borderRadius: 6, marginBottom: 6 })}>
+        <span style={Object.assign({}, mono, { fontSize: 12, padding: "1px 6px", borderRadius: 8, background: C.green + "18", color: C.green, fontWeight: 600, marginRight: 6 })}>{"✓"} VERIFIED</span>
+        {active.math}
+      </div>
+      <div style={Object.assign({}, mono, { fontSize: 13, color: C.mid, lineHeight: 1.7, padding: "8px 10px", background: C.purple + "06", borderRadius: 6 })}>
+        <span style={Object.assign({}, mono, { fontSize: 12, padding: "1px 6px", borderRadius: 8, background: C.purple + "15", color: C.purple, fontWeight: 600, marginRight: 6 })}>{"◇"} PROPOSED</span>
+        {active.prop}
+      </div>
+    </div>
+  );
+
+  // INTERACTIVE
+  var interactive = (
+    <>
+      <Sec sub={"Forward and inverse evaluation"}>Polynomial Explorer</Sec>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+        <button onClick={function() { setMode("forward"); }} style={Object.assign({}, mono, {
+          padding: "8px", borderRadius: 5, cursor: "pointer", fontSize: 14, fontWeight: 600,
+          background: mode === "forward" ? C.gold + "18" : "transparent", color: mode === "forward" ? C.gold : C.mid,
+          border: "0.5px solid " + (mode === "forward" ? C.gold + "55" : C.gold + "22"),
+        })}>x {"→"} f(x)</button>
+        <button onClick={function() { setMode("inverse"); }} style={Object.assign({}, mono, {
+          padding: "8px", borderRadius: 5, cursor: "pointer", fontSize: 14, fontWeight: 600,
+          background: mode === "inverse" ? C.gold + "18" : "transparent", color: mode === "inverse" ? C.gold : C.mid,
+          border: "0.5px solid " + (mode === "inverse" ? C.gold + "55" : C.gold + "22"),
+        })}>y {"→"} find x</button>
+      </div>
+      {mode === "forward" ? (
+        <div style={{ background: "#faf9f7", borderRadius: 6, padding: "10px", marginBottom: 10, border: "0.5px solid " + C.gold + "22" }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <span style={Object.assign({}, mono, { fontSize: 15, color: C.mid })}>x =</span>
+            <input type="text" value={xInput}
+              onChange={function(e) { setXInput(e.target.value); var n = parseFloat(e.target.value); if (!isNaN(n)) setXVal(n); }}
+              onBlur={function() { setXInput(xVal.toFixed(6)); }}
+              style={Object.assign({}, mono, { flex: 1, padding: "6px 8px", fontSize: 15, fontWeight: 600, borderRadius: 6, border: "0.5px solid " + C.gold + "22", outline: "none", color: C.text, background: "#fff" })} />
+          </div>
+          <div style={{ marginTop: 8, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
+            <div><div style={Object.assign({}, mono, { fontSize: 13, color: C.dim })}>f(x)</div><div style={Object.assign({}, mono, { fontSize: 18, fontWeight: 700, color: active ? active.color : C.gold })}>{fmt(fx)}</div></div>
+            <div><div style={Object.assign({}, mono, { fontSize: 13, color: C.dim })}>f{"′"}(x)</div><div style={Object.assign({}, mono, { fontSize: 14, fontWeight: 600, color: C.dim })}>{fmt(fp(xVal))}</div></div>
+            <div><div style={Object.assign({}, mono, { fontSize: 13, color: C.dim })}>h(x) dual</div><div style={Object.assign({}, mono, { fontSize: 14, fontWeight: 600, color: C.dim })}>{fmt(h(xVal))}</div></div>
+          </div>
+          {nearMatches.length > 0 && (
+            <div style={{ marginTop: 10, padding: "8px 10px", background: "#fff", borderRadius: 6, border: "0.5px solid " + C.gold + "22" }}>
+              <div style={Object.assign({}, mono, { fontSize: 13, color: C.dim, marginBottom: 4 })}>NEAR KNOWN VALUES</div>
+              {nearMatches.slice(0, 3).map(function(m, mi) {
+                return (<div key={mi} style={Object.assign({}, mono, { fontSize: 14, color: C.mid, display: "flex", justifyContent: "space-between" })}>
+                  <span>{m.l}</span>
+                  <span style={{ color: m.pct < 0.01 ? C.green : C.dim }}>{m.pct < 0.001 ? "exact" : m.pct.toFixed(3) + "%"}</span>
+                </div>);
+              })}
+            </div>
+          )}
+        </div>
+      ) : (
+        <div style={{ background: "#faf9f7", borderRadius: 6, padding: "10px", marginBottom: 10, border: "0.5px solid " + C.gold + "22" }}>
+          <div style={Object.assign({}, mono, { fontSize: 13, color: C.mid, marginBottom: 6 })}>ENTER A TARGET OUTPUT</div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <span style={Object.assign({}, mono, { fontSize: 15, color: C.mid })}>y =</span>
+            <input type="text" value={yInput} placeholder="e.g. 137.036 or 120"
+              onChange={function(e) { setYInput(e.target.value); var y = parseFloat(e.target.value); if (!isNaN(y)) { var s = inverseSolve(y); setXVal(s); setXInput(s.toFixed(8)); setClicked(true); } }}
+              style={Object.assign({}, mono, { flex: 1, padding: "6px 8px", fontSize: 15, fontWeight: 600, borderRadius: 6, border: "0.5px solid " + C.gold + "33", outline: "none", color: C.text, background: "#fff" })} />
+          </div>
+          {yInput && !isNaN(parseFloat(yInput)) && (
+            <div style={{ marginTop: 12 }}>
+              <div style={Object.assign({}, mono, { fontSize: 14, color: C.dim })}>Unique solution:</div>
+              <div style={Object.assign({}, mono, { fontSize: 20, fontWeight: 700, color: C.gold })}>x = {fmt(xVal, 8)}</div>
+              {identifyX(xVal) && <div style={Object.assign({}, mono, { fontSize: 15, color: C.green, fontWeight: 600, marginTop: 2 })}>{"≈"} {identifyX(xVal)}</div>}
+              <div style={Object.assign({}, mono, { fontSize: 13, color: C.dim, marginTop: 6 })}>Uniqueness guaranteed: f{"′"}(x) {">"} 0 for all x</div>
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
+
+  // PANELS
+  var panels = (
+    <>
+      <Sec sub="Expand to explore">Framework Details</Sec>
+      <Panel id="domains" title="Three-Domain Decomposition" sub={"◇ PROPOSED — pending Connes trace conjecture"}>
+        <div style={Object.assign({}, mono, { fontSize: 13, color: C.mid, lineHeight: 1.8 })}>
+          P = <span style={{color:C.green,fontWeight:600}}>4π³</span> + <span style={{color:C.green,fontWeight:600}}>π²</span> + <span style={{color:C.gold,fontWeight:600}}>π</span> = <span style={{fontWeight:600,color:C.text}}>137.036</span>
+          <div style={{ display: "flex", gap: 6, marginTop: 6, marginBottom: 6 }}>
+            <span style={Object.assign({}, mono, { fontSize: 12, padding: "2px 8px", borderRadius: 8, background: C.green + "12", color: C.green, fontWeight: 600 })}>Bulk S³×S¹ — 90.5%</span>
+            <span style={Object.assign({}, mono, { fontSize: 12, padding: "2px 8px", borderRadius: 8, background: C.green + "18", color: C.green, fontWeight: 600 })}>Excl RP³ — 7.2%</span>
+            <span style={Object.assign({}, mono, { fontSize: 12, padding: "2px 8px", borderRadius: 8, background: C.gold + "15", color: C.gold, fontWeight: 600 })}>Core D² — 2.3%</span>
+          </div>
+          Packing gap: 360°/φ² − P = {(360/PHI/PHI - P_EXACT).toFixed(4)} ≈ 2/φ³ = {(2/Math.pow(PHI,3)).toFixed(4)}
+        </div>
+      </Panel>
+      <Panel id="connes" title="Connes Trace Convergence" sub={"◇ UNVERIFIED — the decisive test"}>
+        <div style={Object.assign({}, mono, { fontSize: 13, color: C.mid, lineHeight: 1.7, marginBottom: 10, padding: "8px 10px", background: C.purple + "06", borderRadius: 6 })}>
+          <span style={Object.assign({}, mono, { fontSize: 12, padding: "1px 6px", borderRadius: 8, background: C.purple + "15", color: C.purple, fontWeight: 600, marginRight: 6 })}>PREDICTION</span>
+          Matrix traces at Fibonacci denominators should converge to P = 137.036 at rate {"φ⁻²ᵏ"}.
+        </div>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
+          <span style={Object.assign({}, mono, { fontSize: 14, color: C.mid })}>k =</span>
+          <button onClick={function(){if(conK>1)setConK(conK-1);}} style={Object.assign({},mono,{width:28,height:28,borderRadius:4,border:"0.5px solid "+C.gold+"33",background:"transparent",cursor:"pointer",fontSize:14,color:C.gold})}>{"−"}</button>
+          <span style={Object.assign({}, mono, { fontSize: 20, color: C.purple, fontWeight: 600, minWidth: 28, textAlign: "center" })}>{conK}</span>
+          <button onClick={function(){if(conK<20)setConK(conK+1);}} style={Object.assign({},mono,{width:28,height:28,borderRadius:4,border:"0.5px solid "+C.gold+"33",background:"transparent",cursor:"pointer",fontSize:14,color:C.gold})}>+</button>
+          <div style={{ display:"flex",gap:3,flex:1,justifyContent:"flex-end" }}>{[1,3,5,8,11,15,20].map(function(v){return <span key={v} onClick={function(){setConK(v);}} style={Object.assign({},mono,{fontSize: 12,padding:"2px 5px",borderRadius:8,cursor:"pointer",color:conK===v?C.purple:C.dim,background:conK===v?C.purple+"12":"transparent"})}>{v}</span>;})}</div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div><div style={Object.assign({}, mono, { fontSize: 13, color: C.dim })}>Fibonacci N_k</div><div style={Object.assign({}, mono, { fontSize: 18, fontWeight: 600 })}>{Math.round(Math.pow(PHI, conK + 8) / Math.sqrt(5)).toLocaleString()}</div></div>
+          <div><div style={Object.assign({}, mono, { fontSize: 13, color: C.dim })}>T_k predicted</div><div style={Object.assign({}, mono, { fontSize: 18, fontWeight: 600, color: C.purple })}>{connesT(conK).toFixed(4)}</div></div>
+          <div><div style={Object.assign({}, mono, { fontSize: 13, color: C.dim })}>Residual P {"−"} T_k</div><div style={Object.assign({}, mono, { fontSize: 14, color: C.mid })}>{(P_EXACT - connesT(conK)).toExponential(3)}</div></div>
+          <div><div style={Object.assign({}, mono, { fontSize: 13, color: C.dim })}>Rate {"φ⁻²ᵏ"}</div><div style={Object.assign({}, mono, { fontSize: 14, color: C.mid })}>{Math.pow(PHI, -2 * conK).toExponential(3)}</div></div>
+        </div>
+      </Panel>
+      <Panel id="mass" title="Mass Spectrum" sub={"◇ CONDITIONAL on Faddeev-Niemi N^(3/4) scaling"}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
+          <span style={Object.assign({}, mono, { fontSize: 14, color: C.dim })}>E{"₁"} =</span>
+          <button onClick={function(){if(massE1>280)setMassE1(massE1-5);}} style={Object.assign({},mono,{width:28,height:28,borderRadius:4,border:"0.5px solid "+C.gold+"33",background:"transparent",cursor:"pointer",fontSize:14,color:C.gold})}>{"−"}</button>
+          <span style={Object.assign({}, mono, { fontSize: 18, color: C.gold, fontWeight: 600, minWidth: 50, textAlign: "center" })}>{massE1}</span>
+          <button onClick={function(){if(massE1<350)setMassE1(massE1+5);}} style={Object.assign({},mono,{width:28,height:28,borderRadius:4,border:"0.5px solid "+C.gold+"33",background:"transparent",cursor:"pointer",fontSize:14,color:C.gold})}>+</button>
+          <span style={Object.assign({}, mono, { fontSize: 13, color: C.dim })}>MeV</span>
+          <div style={{display:"flex",gap:3,flex:1,justifyContent:"flex-end"}}>{[290,300,313,325,340].map(function(v){return <span key={v} onClick={function(){setMassE1(v);}} style={Object.assign({},mono,{fontSize: 12,padding:"2px 5px",borderRadius:8,cursor:"pointer",color:massE1===v?C.gold:C.dim,background:massE1===v?C.gold+"15":"transparent",fontWeight:v===313?700:400})}>{v}</span>;})}</div>
+        </div>
+        <div style={Object.assign({}, mono, { fontSize: 13, color: C.mid, lineHeight: 1.6, marginBottom: 8, padding: "6px 10px", background: C.gold + "06", borderRadius: 4 })}>
+          Slide E{"₁"} to adjust the anchor mass. All predictions scale as E{"₁"} {"×"} N{"¾"}. The <span style={{color:"#6A5A28"}}>dark markers</span> show measured particles {"—"} when bars align with markers, the anchor is calibrated. <span style={{color:C.purple}}>PREDICTION</span> rows are untested search targets.
+        </div>
+        {MASS.map(function(m, mi) {
+          var en = massE1 * Math.pow(m.n, 0.75), mx = massE1 * Math.pow(21, 0.75);
+          var isPred = m.type === "pred", isRetro = m.type === "retro";
+          return (
+            <div key={mi} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 5 }}>
+              <span style={Object.assign({}, mono, { fontSize: 13, color: m.fib ? C.gold : C.dim, width: 36, textAlign: "right", fontWeight: m.fib ? 700 : 400 })}>N={m.n}</span>
+              <span style={Object.assign({}, mono, { fontSize: 14, fontWeight: 600, color: C.text, width: 65 })}>{Math.round(en)}</span>
+              <div style={{ flex: 1, height: 14, background: C.gold + "0c", borderRadius: 4, position: "relative", overflow: "hidden" }}>
+                <div style={{ width: (en / mx) * 100 + "%", height: "100%", borderRadius: 0, background: isPred ? C.purple + "44" : isRetro ? C.rose + "55" : m.fib ? C.gold + "44" : C.gold + "18", transition: "width 0.3s" }} />
+                {m.meas && <div style={{ position: "absolute", left: (m.meas / mx) * 100 + "%", top: 0, bottom: 0, width: 3, background: "#6A5A28", borderRadius: 2 }} />}
+              </div>
+              <span style={Object.assign({}, mono, { fontSize: 12, width: 80, color: isPred ? C.purple : isRetro ? C.mid : C.dim, fontWeight: isPred ? 600 : 400 })}>
+                {isPred ? "PREDICTION" : isRetro ? "retrodiction" : m.type === "anchor" ? "anchor" : ""}
+              </span>
+            </div>
+          );
+        })}
+      </Panel>
+      <Panel id="rk" title="R(k) Metric-Dominance Diagnostic" sub={"◇ NOVEL — not yet experimentally tested"}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+          <div>
+            <div style={Object.assign({}, mono, { fontSize: 12, color: C.dim, marginBottom: 4 })}>Tr(g) metric</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <button onClick={function(){setRkG(Math.max(0,rkG-1));}} style={Object.assign({},mono,{width:24,height:24,borderRadius:4,border:"0.5px solid "+C.gold+"33",background:"transparent",cursor:"pointer",fontSize:12,color:C.gold})}>{"−"}</button>
+              <span style={Object.assign({}, mono, { fontSize: 18, fontWeight: 600, minWidth: 32, textAlign: "center" })}>{rkG}</span>
+              <button onClick={function(){setRkG(rkG+1);}} style={Object.assign({},mono,{width:24,height:24,borderRadius:4,border:"0.5px solid "+C.gold+"33",background:"transparent",cursor:"pointer",fontSize:12,color:C.gold})}>+</button>
+            </div>
+          </div>
+          <div>
+            <div style={Object.assign({}, mono, { fontSize: 12, color: C.dim, marginBottom: 4 })}>|{"Ω"}| Berry curvature</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <button onClick={function(){setRkO(Math.max(0,rkO-1));}} style={Object.assign({},mono,{width:24,height:24,borderRadius:4,border:"0.5px solid "+C.gold+"33",background:"transparent",cursor:"pointer",fontSize:12,color:C.gold})}>{"−"}</button>
+              <span style={Object.assign({}, mono, { fontSize: 18, fontWeight: 600, minWidth: 32, textAlign: "center" })}>{rkO}</span>
+              <button onClick={function(){setRkO(rkO+1);}} style={Object.assign({},mono,{width:24,height:24,borderRadius:4,border:"0.5px solid "+C.gold+"33",background:"transparent",cursor:"pointer",fontSize:12,color:C.gold})}>+</button>
+            </div>
+          </div>
+        </div>
+        <div style={{ height: 8, borderRadius: 4, overflow: "hidden", background: C.gold + "08", border: "0.5px solid " + C.gold + "22" }}><div style={{ width: Math.min(isNaN(rkVal) ? 0 : rkVal * 100, 100) + "%", height: "100%", background: "linear-gradient(90deg," + C.rose + "66," + C.gold + "55," + C.green + "66)", borderRadius: 4, transition: "width .3s" }} /></div>
+        <div style={Object.assign({}, mono, { display: "flex", justifyContent: "space-between", fontSize: 12, color: C.dim, margin: "4px 0 8px" })}><span>CHARGED 0</span><span>NEUTRAL 1</span></div>
+        <div style={{ textAlign: "center" }}>
+          <div style={Object.assign({}, mono, { fontSize: 18, fontWeight: 600, color: rkVal > 0.95 ? C.green : rkVal > 0.5 ? C.gold : C.purple })}>{isNaN(rkVal) ? "—" : rkVal.toFixed(4)}</div>
+          <div style={Object.assign({}, mono, { fontSize: 13, fontWeight: 600, letterSpacing: 1, color: rkVal > 0.95 ? C.green : rkVal > 0.5 ? C.gold : C.purple })}>{isNaN(rkVal) ? "" : rkVal > 0.95 ? "NEUTRAL" : rkVal > 0.5 ? "MIXED" : "CHARGED"}</div>
+        </div>
+      </Panel>
+    </>
+  );
+
+  var demoBar = (
+    <div style={{ marginBottom: 6, padding: "6px 12px", background: C.gold + "08", borderRadius: 6, border: "0.5px solid " + C.gold + "22" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+        <span style={Object.assign({}, mono, { fontSize: 14, fontWeight: 600, color: demo ? (sorted[demoStep] ? sorted[demoStep].color : C.gold) : (active && clicked ? active.color : C.dim) })}>{demo ? (sorted[demoStep] ? sorted[demoStep].label + " → " + sorted[demoStep].out + "  ·  " + sorted[demoStep].match + "  ·  " + sorted[demoStep].field : "") : (active && clicked ? active.label + " → " + active.out + "  ·  " + active.match + "  ·  " + active.field + "  ·  " + (active.status === "math" ? "✓ verified" : "◇ proposed") : "Select a chamber or start the tour")}</span>
+        {demo && <span style={Object.assign({}, mono, { fontSize: 12, color: C.dim })}>{demoStep + 1}/{sorted.length}</span>}
+      </div>
+      <div style={{ height: 3, background: C.gold + "12", borderRadius: 2, overflow: "hidden" }}>
+        {demo && <div key={demoStep} style={{ height: "100%", background: sorted[demoStep] ? sorted[demoStep].color : C.gold, borderRadius: 2, animation: "demoBar " + DEMO_MS + "ms linear" }} />}
+        {!demo && active && clicked && <div style={{ height: "100%", width: "100%", background: active.color + "44", borderRadius: 2 }} />}
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={Object.assign({}, mono, { background: C.bg, minHeight: "100vh", padding: wide ? "20px 28px" : "14px", maxWidth: 960, margin: "0 auto", boxSizing: "border-box", lineHeight: 1.5, color: C.text })}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+        <div>
+          <h1 style={Object.assign({}, serif, { fontSize: wide ? 28 : 22, fontWeight: 700, margin: 0 })}>Hopfion Evaluation Map</h1>
+          <div style={Object.assign({}, serif, { fontSize: wide ? 16 : 14, color: C.mid, marginTop: 4, fontStyle: "italic" })}>Interactive evaluation map for f(x) = 4x³ + x² + x with topologically constrained coefficients (4,1,1)</div>
+          <div style={Object.assign({}, mono, { fontSize: 12, color: C.dim, marginTop: 4 })}>Companion to: Hopfion Topology, Quantum Geometric Tensor Saturation, and the Fine-Structure Constant</div>
+        </div>
+      </div>
+      
+      
+      {hero}
+      
+      {demoBar}
+      {wide ? (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "start" }}>
+          <div>
+            <Sec sub={"Click any chamber to explore"}>Distinguished Evaluations</Sec>
+            {shellSection}
+            {detail}
+          </div>
+          <div style={{ position: "sticky", top: 20 }}>
+            {interactive}
+            {panels}
+          </div>
+        </div>
+      ) : (
+        <>
+          <Sec sub={"Click any chamber to explore"}>Distinguished Evaluations</Sec>
+          {shellSection}
+          {detail}
+          {interactive}
+          {panels}
+        </>
+      )}
+      <div style={Object.assign({}, mono, { textAlign: "center", padding: "16px 0 8px", fontSize: 10, color: C.dim, borderTop: "0.5px solid " + C.gold + "22", marginTop: 14 })}>
+        f(x) = 4x{"³"} + x{"²"} + x {"·"} Coefficients (4,1,1) proposed as fixed by SU(2) topology {"·"} Zero free parameters {"·"} DOI: 10.5281/zenodo.19394165
+      </div>
+    </div>
+  );
+}
+
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
