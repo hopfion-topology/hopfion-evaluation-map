@@ -117,7 +117,7 @@ function App() {
   var _w = useState(false), wide = _w[0], setWide = _w[1];
   var _cl = useState(true), clicked = _cl[0], setClicked = _cl[1];
   var demoRef = useRef(null);
-  var sorted = useMemo(function() { return EVALS.slice().sort(function(a,b) { return b.x - a.x; }); }, []);
+  var sorted = useMemo(function() { return EVALS.slice().sort(function(a,b) { return Math.abs(4*a.x*a.x*a.x+a.x*a.x+a.x) - Math.abs(4*b.x*b.x*b.x+b.x*b.x+b.x); }); }, []);
 
   useEffect(function() { var c = function() { setWide(window.innerWidth >= 840); }; c(); window.addEventListener("resize", c); return function() { window.removeEventListener("resize", c); }; }, []);
   useEffect(function() {
