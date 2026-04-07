@@ -46,12 +46,12 @@ function inverseSolve(y) {
 
 var EVALS = [
   { x: PI, label: "π", out: "137.036", match: "α⁻¹ = 137.035999", gap: "2.22 ppm", field: "Electromagnetism", color: "#287050", status: "proposed",
-    math: "f(π) = 137.036304. Closest among 9,260 pure-π polynomials by 206×.",
+    math: "f(π) = 137.036304. Closest among 1.03M pure-π polynomials (|a|,|b|,|c|≤50) by 10×.",
     prop: "This is the proposed saturation ceiling of the vacuum topology. The 2.22 ppm gap is argued to be consistent with QED vacuum polarization." },
   { x: 3, label: "3", out: "120", match: "5! = 1/ζ(−3) = |I_h|", gap: "exact", field: "Vacuum energy", color: "#A07040", status: "math",
     math: "f(3) = 108+9+3 = 120 = 5! = 1/ζ(−3). Also f(1)·f(3) = 720 = 6!.",
     prop: "Connection to vacuum energy regularization and icosahedral symmetry (|I_h| = 120)." },
-  { x: PHI, label: "φ", out: "5φ³ = 21.18", match: "Algebraic identity", gap: "exact", field: "Number theory", color: "#8A7A4A", status: "math",
+  { x: PHI, label: "φ", out: "5φ³", match: "Algebraic identity", gap: "exact", field: "Number theory", color: "#8A7A4A", status: "math",
     math: "f(φ) = 5φ³ exactly. One-line proof from φ²=φ+1. Dual: h(φ) = 3φ³.",
     prop: "The coefficient 5 = −Δ/3 (where Δ = −15 is the cubic discriminant) connects to golden-ratio self-consistency." },
   { x: 1, label: "1", out: "6", match: "Calabi-Yau dimensions", gap: "exact", field: "String theory", color: "#3A8888", status: "math",
@@ -187,7 +187,7 @@ function App() {
         </div>
       </div>
       <div style={Object.assign({}, mono, { fontSize: 12, color: C.dim, marginTop: 8, borderTop: "0.5px solid " + C.gold + "22", paddingTop: 6 })}>
-        Among 9,260 polynomials with small integer coefficients tested, the next closest to α⁻¹ is <strong style={{ color: C.text }}>206× farther</strong> from the measured value.</div>
+        Among 1,030,301 polynomials with |a|,|b|,|c| ≤ 50 tested, the next closest to α⁻¹ is <strong style={{ color: C.text }}>10× farther</strong> from the measured value.</div>
       <div style={{textAlign:"center",marginTop:10}}>
         <button onClick={function(){setDemo(!demo);}} style={Object.assign({},mono,{padding:"8px 28px",borderRadius:20,cursor:"pointer",fontSize:12,fontWeight:600,background:demo?C.gold+"18":C.gold+"15",color:C.gold,border:"0.5px solid "+C.gold+"33"})}>{demo?"■ Stop tour":"▶ Tour the 8 evaluations"}</button>
       </div>
