@@ -1,34 +1,41 @@
 # Hopfion Evaluation Map
 
-Interactive companion calculator for the paper:
+Interactive computational companion for the paper:
 
 **Hopfion Topology, Quantum Geometric Tensor Saturation, and the Fine-Structure Constant**
 
-DOI: [10.5281/zenodo.19394165](https://doi.org/10.5281/zenodo.19394165)
+DOI [https://doi.org/10.5281/zenodo.19394164][1]  
 
 ## What is this?
 
-The polynomial f(x) = 4x³ + x² + x, with coefficients (4,1,1) argued to be fixed by SU(2) topology, outputs the fine-structure constant α⁻¹ ≈ 137.036 when evaluated at π — with zero free parameters.
+The polynomial f(x) = 4x³ + x² + x, with coefficients (4,1,1) proposed to be fixed by SU(2) topology, outputs the fine-structure constant α⁻¹ ≈ 137.036 when evaluated at π — with zero free parameters.
 
 This calculator lets you:
 - **Explore all 8 distinguished evaluations** via the interactive nautilus shell
 - **Tour** through each evaluation with the guided walkthrough
-- **Try your own inputs** with the polynomial explorer
-- **Examine framework predictions** including the Connes trace convergence, mass spectrum, and R(k) metric-dominance diagnostic
+- **Try your own inputs** with the polynomial explorer (forward and inverse)
+- **Examine framework predictions** including the Connes trace convergence, mass spectrum (with N=16), and R(k) metric-dominance diagnostic
 
 ## Deploy
 
-This is a single-file application. Just open `index.html` in any browser, or deploy to GitHub Pages:
+Single-file application. Open `index.html` in any browser, or deploy to GitHub Pages:
 
 1. Push this repo to GitHub
-2. Go to Settings → Pages
-3. Set source to "main" branch, root folder
-4. Your calculator will be live at `https://yourusername.github.io/repo-name/`
+2. Settings → Pages → Source: main branch, root folder
+3. Live at `https://yourusername.github.io/repo-name/`
+
+## Files
+
+- `index.html` — Complete standalone app (React via CDN, no build step)
+- `hopfion_evaluation_map.jsx` — Raw React component source for editing
+- `README.md` — This file
 
 ## Math verified
 
-Every number in this calculator has been independently verified by computation. See the paper for proofs and derivations.
+Every number in this calculator has been independently verified by computation. All 8 evaluations, Connes trace convergence, mass spectrum scaling, and R(k) diagnostic are mathematically confirmed.
 
 ## License
 
 MIT
+
+[1]:	https://doi.org/10.5281/zenodo.19394164
