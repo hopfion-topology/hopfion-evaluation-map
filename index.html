@@ -48,9 +48,9 @@ var EVALS = [
   { x: PI, label: "π", out: "137.036", match: "α⁻¹ = 137.035999", gap: "2.22 ppm", field: "Electromagnetism", color: "#287050", status: "proposed",
     math: "f(π) = 137.036304. Closest among 1.03M pure-π polynomials (|a|,|b|,|c|≤50) by 10×.",
     prop: "This is the proposed saturation ceiling of the vacuum topology. The 2.22 ppm gap is argued to be consistent with QED vacuum polarization." },
-  { x: 3, label: "3", out: "120", match: "5! = 1/ζ(−3) = |I_h|", gap: "exact", field: "Vacuum energy", color: "#A07040", status: "math",
+  { x: 3, label: "3", out: "120", match: "5! = 1/ζ(−3) = |2I|", gap: "exact", field: "Vacuum energy", color: "#A07040", status: "math",
     math: "f(3) = 108+9+3 = 120 = 5! = 1/ζ(−3). Also f(1)·f(3) = 720 = 6!.",
-    prop: "Connection to vacuum energy regularization and icosahedral symmetry (|I_h| = 120)." },
+    prop: "Connection to vacuum energy regularization and icosahedral symmetry (|2I| = 120)." },
   { x: PHI, label: "φ", out: "5φ³", match: "Algebraic identity", gap: "exact", field: "Number theory", color: "#8A7A4A", status: "math",
     math: "f(φ) = 5φ³ exactly. One-line proof from φ²=φ+1. Dual: h(φ) = 3φ³.",
     prop: "The coefficient 5 = −Δ/3 (where Δ = −15 is the cubic discriminant) connects to golden-ratio self-consistency." },
@@ -60,7 +60,7 @@ var EVALS = [
   { x: 0.5, label: "1/2", out: "5/4", match: "Re(s) = 1/2 via CPT", gap: "exact", field: "Zeta function", color: "#7A9A30", status: "math",
     math: "f(1/2) = 5/4. The even part of f satisfies f(x)+f(−x) = 2x², so f(1/2)+f(−1/2) = 1/2.",
     prop: "Connection to the Riemann critical line Re(s) = 1/2 and Hopf base radius." },
-  { x: 1/(PHI*PHI), label: "1/φ²", out: "0.751", match: "≈ 3/4 mass exponent", gap: "0.10%", field: "Particle physics", color: "#9868A0", status: "proposed",
+  { x: 1/(PHI*PHI), label: "1/φ²", out: "0.751", match: "≈ 3/4 mass exponent", gap: "0.104%", field: "Particle physics", color: "#9868A0", status: "proposed",
     math: "f(1/φ²) = 0.750776, verified by direct computation.",
     prop: "Proximity to 3/4, the Faddeev-Niemi mass-scaling exponent for hopfions." },
   { x: 0, label: "0", out: "0", match: "Trivial vacuum", gap: "exact", field: "Ground state", color: "#B0A040", status: "math",
@@ -95,7 +95,7 @@ var MASS = [
   { n:1, fib:true, type:"anchor" }, { n:2, fib:true, type:"theory" }, { n:5, fib:true, type:"theory" },
   { n:8, fib:true, type:"retro", meas:1505 },
   { n:13, fib:true, type:"pred" }, { n:15, fib:false, type:"retro", meas:2370 }, { n:16, fib:false, type:"theory" },
-  { n:19, fib:false, type:"pred" }, { n:21, fib:true, type:"pred" },
+  { n:19, fib:false, type:"pred" }, { n:21, fib:true, type:"theory" },
 ];
 
 function connesT(k) { return 4*Math.pow(PI,3) + (PI*PI+PI) * (1 - Math.pow(PHI, -2*k)); }
