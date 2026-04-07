@@ -121,7 +121,7 @@ function App() {
   useEffect(function() { var c = function() { setWide(window.innerWidth >= 840); }; c(); window.addEventListener("resize", c); return function() { window.removeEventListener("resize", c); }; }, []);
   useEffect(function() {
     var l = document.createElement("link"); l.href = "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"; l.rel = "stylesheet"; document.head.appendChild(l);
-    var s = document.createElement("style"); s.textContent = "@keyframes demoBar{from{width:0%}to{width:100%}} input[type=text],input[type=number]{font-family:'IBM Plex Mono',monospace !important;} input::placeholder{color:#bbb;font-weight:400;}"; document.head.appendChild(s);
+    var s = document.createElement("style"); s.textContent = "@keyframes demoBar{from{width:0%}to{width:100%}} input[type=text],input[type=number]{font-family:'IBM Plex Mono',monospace !important;} input::placeholder{color:#bbb;font-weight:400;} *{-webkit-tap-highlight-color:transparent;}"; document.head.appendChild(s);
     return function() { document.head.removeChild(l); document.head.removeChild(s); };
   }, []);
 
