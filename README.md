@@ -2,7 +2,7 @@
 
 Interactive computational companion for the paper:
 
-**Hopfion Topology, Quantum Geometric Tensor Saturation, and the Fine-Structure Constant**
+**Hopf Fibration Three-Domain Volume Decomposition: Generating Polynomial and the QGT Saturation Ceiling**
 
 ## What is this?
 
